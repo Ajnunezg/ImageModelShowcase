@@ -1,3 +1,4 @@
+
 import os
 import json
 import requests
@@ -5,7 +6,7 @@ from base64 import b64decode
 
 def generate_image_google(prompt, api_key=None):
     """
-    Generate an image using Google's Imagen 3
+    Generate an image using Google's Vertex AI
     
     Args:
         prompt: Text prompt for image generation
@@ -18,31 +19,25 @@ def generate_image_google(prompt, api_key=None):
         # Use provided API key or get from environment
         api_key = api_key or os.environ.get('GOOGLE_API_KEY')
         
-        # Google Imagen API endpoint
-        url = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0:generateContent"
+        # Google Vertex AI endpoint
+        url = "https://us-central1-aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/us-central1/publishers/google/models/imagegeneration:predict"
         
-        # Request headers and parameters
+        # Request headers
         headers = {
-            "Content-Type": "application/json",
-            "x-goog-api-key": api_key
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
         }
         
         # Request body
         data = {
-            "contents": [
-                {
-                    "role": "user",
-                    "parts": [
-                        {
-                            "text": prompt
-                        }
-                    ]
-                }
-            ],
-            "generation_config": {
-                "temperature": 0.4,
-                "topP": 1.0,
-                "topK": 32
+            "instances": [{
+                "prompt": prompt
+            }],
+            "parameters": {
+                "sampleCount": 1,
+                "aspectRatio": "1:1",
+                "negativePrompt": "",
+                "seed": 0
             }
         }
         
@@ -54,12 +49,10 @@ def generate_image_google(prompt, api_key=None):
             response_json = response.json()
             
             # Extract image data
-            for candidate in response_json.get('candidates', []):
-                for part in candidate.get('content', {}).get('parts', []):
-                    if 'inlineData' in part:
-                        # Extract and decode base64 image data
-                        image_data = b64decode(part['inlineData']['data'])
-                        return {"image_data": image_data}
+            if 'predictions' in response_json and len(response_json['predictions']) > 0:
+                image_b64 = response_json['predictions'][0]['bytesBase64Encoded']
+                image_data = b64decode(image_b64)
+                return {"image_data": image_data}
             
             return {"error": "No image data found in the response"}
         else:
