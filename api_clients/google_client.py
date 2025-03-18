@@ -1,5 +1,5 @@
 import os
-from google import genai
+import google.generativeai as genai
 from google.genai import types
 from base64 import b64decode
 import re
