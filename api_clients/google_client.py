@@ -6,7 +6,7 @@ from base64 import b64decode
 
 def generate_image_google(prompt, api_key=None):
     """
-    Generate an image using Google's Imagen 3 through Gemini API
+    Generate an image using Google's Imagen 3 (imagen-3.0-generate-002) through Gemini API
     
     Args:
         prompt: Text prompt for image generation
@@ -19,8 +19,8 @@ def generate_image_google(prompt, api_key=None):
         # Use provided API key or get from environment
         api_key = api_key or os.environ.get('GOOGLE_API_KEY')
         
-        # Google Gemini API endpoint for Imagen
-        url = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0:generateContent"
+        # Google Gemini API endpoint for Imagen 3
+        url = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:generateContent"
         
         # Request headers and parameters
         headers = {
