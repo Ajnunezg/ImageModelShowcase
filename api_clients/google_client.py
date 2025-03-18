@@ -6,7 +6,7 @@ from base64 import b64decode
 
 def generate_image_google(prompt, api_key=None):
     """
-    Generate an image using Google's Vertex AI
+    Generate an image using Google's Imagen 3 through Gemini API
     
     Args:
         prompt: Text prompt for image generation
@@ -19,25 +19,33 @@ def generate_image_google(prompt, api_key=None):
         # Use provided API key or get from environment
         api_key = api_key or os.environ.get('GOOGLE_API_KEY')
         
-        # Google Vertex AI endpoint
-        url = "https://us-central1-aiplatform.googleapis.com/v1/projects/PROJECT_ID/locations/us-central1/publishers/google/models/imagegeneration:predict"
+        # Google Gemini API endpoint for Imagen
+        url = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0:generateContent"
         
-        # Request headers
+        # Request headers and parameters
         headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
+        
+        # Add API key as a query parameter
+        url = f"{url}?key={api_key}"
         
         # Request body
         data = {
-            "instances": [{
-                "prompt": prompt
-            }],
-            "parameters": {
-                "sampleCount": 1,
-                "aspectRatio": "1:1",
-                "negativePrompt": "",
-                "seed": 0
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "text": prompt
+                        }
+                    ]
+                }
+            ],
+            "generation_config": {
+                "temperature": 0.4,
+                "topP": 1.0,
+                "topK": 32
             }
         }
         
@@ -49,10 +57,12 @@ def generate_image_google(prompt, api_key=None):
             response_json = response.json()
             
             # Extract image data
-            if 'predictions' in response_json and len(response_json['predictions']) > 0:
-                image_b64 = response_json['predictions'][0]['bytesBase64Encoded']
-                image_data = b64decode(image_b64)
-                return {"image_data": image_data}
+            for candidate in response_json.get('candidates', []):
+                for part in candidate.get('content', {}).get('parts', []):
+                    if 'inlineData' in part:
+                        # Extract and decode base64 image data
+                        image_data = b64decode(part['inlineData']['data'])
+                        return {"image_data": image_data}
             
             return {"error": "No image data found in the response"}
         else:
