@@ -1,4 +1,3 @@
-
 import os
 import json
 import requests
@@ -6,7 +5,7 @@ from base64 import b64decode
 
 def generate_image_google(prompt, api_key=None):
     """
-    Generate an image using Google's Imagen
+    Generate an image using Google's Imagen 3
     
     Args:
         prompt: Text prompt for image generation
@@ -20,7 +19,7 @@ def generate_image_google(prompt, api_key=None):
         api_key = api_key or os.environ.get('GOOGLE_API_KEY')
         
         # Google Imagen API endpoint
-        url = "https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent"
+        url = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0:generateContent"
         
         # Request headers and parameters
         headers = {
@@ -30,16 +29,20 @@ def generate_image_google(prompt, api_key=None):
         
         # Request body
         data = {
-            "contents": [{
-                "parts":[{
-                    "text": prompt
-                }]
-            }],
-            "generationConfig": {
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "text": prompt
+                        }
+                    ]
+                }
+            ],
+            "generation_config": {
                 "temperature": 0.4,
-                "topK": 32,
-                "topP": 1,
-                "maxOutputTokens": 2048
+                "topP": 1.0,
+                "topK": 32
             }
         }
         
